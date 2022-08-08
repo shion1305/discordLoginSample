@@ -27,6 +27,7 @@ func main() {
 }
 
 func getUser(code string, context *gin.Context) {
+	// setup default configuration for Application
 	conf := &oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
 		ClientSecret: os.Getenv("client_secret"),
@@ -34,12 +35,17 @@ func getUser(code string, context *gin.Context) {
 		RedirectURL:  "http://localhost:8080/testLogin",
 		Scopes:       []string{"email", "identity"},
 	}
+
+	// Send request with received code and acquires token
 	token, err := conf.Exchange(context.Request.Context(), code)
 	if err != nil {
+		// Terminate on Error
 		context.Writer.WriteHeader(http.StatusInternalServerError)
 		context.Writer.Write([]byte(err.Error()))
 		return
 	}
+
+	// acquire information using token and given application credentials
 	res, err := conf.Client(context.Request.Context(), token).Get("https://discord.com/api/users/@me")
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
